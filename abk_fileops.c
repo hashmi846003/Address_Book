@@ -79,14 +79,47 @@ void list_contacts(abk_t *abk)
 }
 
 /* SEARCH (name/phone/email/address) */
+// void search_contact(abk_t *abk)
+// {
+//     char key[64];
+//     int found = 0;
+
+//     printf("Search: ");
+//     fgets(key, sizeof(key), stdin);
+//     key[strcspn(key,"\n")] = 0;
+
+//     for (int i = 0; i < abk->count; i++)
+//     {
+//         if (strstr(abk->list[i].name, key) ||
+//             strstr(abk->list[i].phone, key) ||
+//             strstr(abk->list[i].email, key) ||
+//             strstr(abk->list[i].address, key))
+//         {
+//             printf("ID:%d | %s | %s | %s | %s\n",
+//                    abk->list[i].id,
+//                    abk->list[i].name,
+//                    abk->list[i].phone,
+//                    abk->list[i].email,
+//                    abk->list[i].address);
+//             found = 1;
+//         }
+//     }
+
+//     if (!found)
+//         log_warn(K_FAIL, "No Match Found");
+
+//     WAIT_FOR_ENTER_KEY;
+// }
 void search_contact(abk_t *abk)
 {
     char key[64];
     int found = 0;
 
-    printf("Search: ");
+    printf("Search (name/phone/email/address): ");
     fgets(key, sizeof(key), stdin);
-    key[strcspn(key,"\n")] = 0;
+    key[strcspn(key, "\n")] = 0;  // remove newline
+
+    printf("\n--- Search Results ---\n");
 
     for (int i = 0; i < abk->count; i++)
     {
@@ -106,10 +139,11 @@ void search_contact(abk_t *abk)
     }
 
     if (!found)
-        log_warn(K_FAIL, "No Match Found");
+        log_warn(K_FAIL, "No matching contact found");
 
     WAIT_FOR_ENTER_KEY;
 }
+
 
 /* EDIT (by ID) */
 void edit_contact(abk_t *abk)
