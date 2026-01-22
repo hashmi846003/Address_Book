@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/repos/StudentProjects/!svn/ver/29/ECEP/C/AddressBook/Source
+END
+abk_main.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/repos/StudentProjects/!svn/ver/30/ECEP/C/AddressBook/Source/abk_main.c
+END
+abk.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/StudentProjects/!svn/ver/34/ECEP/C/AddressBook/Source/abk.h
+END
+abk_menus.c
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/repos/StudentProjects/!svn/ver/39/ECEP/C/AddressBook/Source/abk_menus.c
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/StudentProjects/!svn/ver/35/ECEP/C/AddressBook/Source/README
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/repos/StudentProjects/!svn/ver/36/ECEP/C/AddressBook/Source/Makefile
+END
+abk_fileops.c
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/repos/StudentProjects/!svn/ver/35/ECEP/C/AddressBook/Source/abk_fileops.c
+END
+abk_log.c
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/repos/StudentProjects/!svn/ver/34/ECEP/C/AddressBook/Source/abk_log.c
+END

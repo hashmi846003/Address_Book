@@ -1,0 +1,693 @@
+/*
+	C Project
+	Address Book
+
+	Team A: Fenil, Flaby, Shridhar
+
+	26/Nov/2012
+
+	Implementation C File
+
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "abk.h"
+
+
+char save_flag = SAVED;
+/*
+menu to search for a contact:
+input - none
+output - index number of contact if found,
+	0 if not found.
+*/
+
+int read_string_from_stdin(char *string, int count)
+{
+	int c, i;
+	for(i = 0; (c = getchar()) != '\n'; i++)
+	{
+		if( i < count)
+		{
+			string[i] = c;	
+			string[i + 1] = '\0';
+		}	
+	}
+}
+
+int reallocate_memory(abk_t *p_address_book)
+{
+	contact_detail_t *temp_list = calloc(sizeof(contact_detail_t), (p_address_book->size * 2));
+
+	if(temp_list != NULL)
+	{
+		memcpy(temp_list, p_address_book->list, (p_address_book->size * sizeof(contact_detail_t)));
+		free(p_address_book->list);
+		p_address_book->list = temp_list;
+		p_address_book->size *= 2;
+		return K_SUCCESS;
+	}
+	return K_FAIL;
+}
+
+int list_all_contact(abk_t *p_address_book)
+{
+	int i;
+
+	CLR_SCREEN;
+	printf("LIST OF CONTACT NAME\n");
+	for(i = 0; i < p_address_book->count; i++)	
+	{
+		printf("%d. %s\n" ,(i + 1), p_address_book->list[i].name);
+	}
+}
+
+int search_by_name_menu(abk_t *p_address_book, int *index)
+{
+	int i;
+	char temp_buff[32];
+	
+	WAIT_FOR_ENTER_KEY;
+	CLR_SCREEN;
+	printf("Enter the name to be Search: ");
+//	scanf("\n%[^'\n']", temp_buff);
+	read_string_from_stdin(temp_buff, 32);
+
+	for(i = 0; i < p_address_book->count; i++)
+	{
+		if(!strcmp(temp_buff, p_address_book->list[i].name))
+		{
+			printf("%d : %s\n", (i + 1), p_address_book->list[i].name);
+			*index = i;
+			return K_SUCCESS;
+		}
+	}
+	printf("************ Conatct NOT Found **************\n\n");
+	return K_FAIL;
+}
+
+int search_by_phone_number_menu(abk_t *p_address_book, int *index)
+{
+	int i, j, found_result = 0;
+	char temp_buff[32];
+		
+	WAIT_FOR_ENTER_KEY;
+	CLR_SCREEN;
+	printf("Enter the phone number to be Search: ");
+//	scanf("\n%[^'\n']", temp_buff);
+	read_string_from_stdin(temp_buff, 32);
+
+	for(i = 0; i < p_address_book->count; i++)
+	{
+		for(j = 0; j < PHONE_NUMBER_COUNT; j++)
+		{
+			if(!strcmp(temp_buff, p_address_book->list[i].phone_numbers[j]))
+			{
+				printf("%d. %s\n", (i + 1), p_address_book->list[i].name);
+				found_result += 1;
+				if(index != NULL)
+				{
+					*index = (i + 1);
+				}
+			}
+		}
+	}
+	
+	if(index != NULL)
+	{
+		if(found_result > 1)
+		{
+			printf("Select the Contact: ");
+			scanf("%d", index);
+			*index -= 1;
+			return K_SUCCESS;
+		}
+		else if(*index > 0)
+		{
+			*index -= 1;
+			return K_SUCCESS;
+		}
+		else
+		{	
+			K_FAIL;
+		}
+	}
+	else
+		return K_FAIL;
+}
+
+int search_by_email_address_menu(abk_t *p_address_book, int *index)
+{
+	int i, j, found_result = 0;
+	char temp_buff[32];
+	
+	WAIT_FOR_ENTER_KEY;
+	CLR_SCREEN;
+	printf("Enter the email address to be Search: ");
+	//scanf("\n%[^'\n']", temp_buff);
+	read_string_from_stdin(temp_buff, 32);
+
+	for(i = 0; i < p_address_book->count; i++)
+	{
+		for(j = 0; j < EMAIL_ADDRESS_COUNT; j++)
+		{
+			if(!strcmp(temp_buff, p_address_book->list[i].email_addresses[j]))
+			{
+				printf("%d. %s\n", (i + 1), p_address_book->list[i].name);
+				found_result += 1;
+				if(index != NULL)
+				{
+					*index = (i + 1);
+				}
+			}
+		}
+	}
+	
+	if(index != NULL)
+	{
+		if(found_result > 1)
+		{
+			printf("Select the Contact: ");
+			scanf("%d", index);
+			*index -= 1;
+			return K_SUCCESS;
+		}
+		else if(*index > 0)
+		{
+			*index -= 1;
+			return K_SUCCESS;
+		}
+		else
+		{	
+			K_FAIL;
+		}
+	}
+	else
+		return K_FAIL;
+}
+
+int search_component(abk_t *p_address_book, int *index)
+{
+	WAIT_FOR_ENTER_KEY;
+	
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("** SEARCH CONTACT MENU ***\n\n");
+		printf("N. Search by name\n");
+		printf("P. Search by phone number\n");
+		printf("E. Search by email address\n");
+		printf("L. List all contact\n");
+		printf("X. Exit to main menu\n");
+
+		switch(getchar())
+		{
+			case 'N':
+			case 'n':
+				return search_by_name_menu(p_address_book, index);
+			case 'P':
+			case 'p':
+				return search_by_phone_number_menu(p_address_book, index);
+			case 'E':
+			case 'e':
+				return search_by_email_address_menu(p_address_book, index);
+			case 'L':
+			case 'l':
+				if(index != NULL)
+				{
+					list_all_contact(p_address_book);
+					printf("Select the Contact: ");
+					scanf("%d", index);
+					*index -= 1;	
+					return K_SUCCESS;
+				}
+			case 'X':
+			case 'x':
+				return K_FAIL;
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+}
+
+int search_contact(abk_t *p_address_book)
+{
+	search_component(p_address_book, NULL);
+	printf("\nPRESS ENTER TO GO TO MAIN MENU\n");
+	WAIT_FOR_ENTER_KEY;
+}
+
+int add_contact_name(abk_t *p_address_book, int index)
+{
+	char name_buff[NAME_SIZE];
+	int i;
+
+	WAIT_FOR_ENTER_KEY;
+	CLR_SCREEN;
+RENAME:
+	memset(name_buff, 0, sizeof(name_buff));
+	printf("Enter the New Contact name : \n");
+	//scanf("%[^'\n']", name_buff);
+	read_string_from_stdin(name_buff, NAME_SIZE);
+
+	for(i = 0; i < p_address_book->count; i++)
+	{
+		if(!strcmp(p_address_book->list[i].name, name_buff))
+		{
+			CLR_SCREEN;
+			WAIT_FOR_ENTER_KEY;
+			printf("Entered contact already exist\n");
+			goto RENAME;
+		}
+		else if(strlen(name_buff) == 0)
+		{
+			return K_FAIL;
+		}
+	}	
+	strcpy(p_address_book->list[index].name, name_buff);
+	save_flag = NOT_SAVED;
+	return K_SUCCESS;
+}
+
+
+int select_detail(char c_details[DETAIL_ITEM_COUNT][DETAIL_SIZE], int *index)
+{
+	int i;
+
+	WAIT_FOR_ENTER_KEY;
+	CLR_SCREEN;
+
+	for(i = 0; strlen(c_details[i]) != 0 && i < DETAIL_ITEM_COUNT; i++)
+	{
+		printf("%d. %s\n", (i + 1), c_details[i]);
+	}
+	if(i == 0)
+	{
+		*index = 0;
+		return K_SUCCESS;
+	}
+	else if(i > 0)
+	{
+		printf("Choose the phone number: ");
+		scanf("%d", index);
+
+		*index -= 1;
+		if(*index < i)
+		{
+			return	K_SUCCESS;
+		}
+	}
+	return K_FAIL;
+}
+
+int add_contact_detail(char c_details[DETAIL_ITEM_COUNT][DETAIL_SIZE], char *field)
+{
+	int i;
+	WAIT_FOR_ENTER_KEY;
+	for(i = 0; i < DETAIL_ITEM_COUNT; i++)
+	{
+		if(strlen(c_details[i]) == 0)
+		{
+			CLR_SCREEN;
+			printf("Enter the new %s: ",field);
+			//scanf("\n%[^'\n']", c_details[i]);
+			read_string_from_stdin(c_details[i], DETAIL_SIZE);
+			save_flag = NOT_SAVED;
+			return K_SUCCESS;
+		}
+	}
+}
+
+int modify_contact_detail(char c_details[DETAIL_ITEM_COUNT][DETAIL_SIZE], char *field)
+{
+	int index;
+	if(select_detail(c_details, &index) == K_SUCCESS)
+	{
+		memset(c_details[index], 0, DETAIL_SIZE);
+		add_contact_detail(c_details, field);
+		return K_SUCCESS;
+	}
+	return K_FAIL;
+}
+
+int delete_contact_detail(char c_details[DETAIL_ITEM_COUNT][DETAIL_SIZE])
+{
+	int index, i;
+	if(select_detail(c_details, &index) == K_SUCCESS)
+	{
+		for(i = index; i < (DETAIL_ITEM_COUNT - 1); i++)
+		{
+			memset(c_details[i], 0, DETAIL_SIZE);
+			strcpy(c_details[i], c_details[i + 1]);
+			save_flag = NOT_SAVED;
+		}		
+		memset(c_details[i], 0, DETAIL_SIZE);
+		return K_SUCCESS;
+	}
+	return K_FAIL;
+}
+
+int add_detail_menu(contact_detail_t *p_detail)
+{
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("***** ADD DETAIL MENU *****\n");
+		printf("NAME : %s\n\n", p_detail->name);
+		printf("P. Add phone number\n");
+		printf("E. Add email address\n");
+		printf("X. Exit to add contact menu\n");
+		switch(getchar())
+		{
+			case 'P':
+			case 'p':
+				add_contact_detail(p_detail->phone_numbers, "phone number");
+				break;
+			case 'E':
+			case 'e':
+				add_contact_detail(p_detail->email_addresses, "email address");
+				break;
+			case 'X':
+			case 'x':
+				return K_SUCCESS;
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+}
+
+int add_contact_menu(abk_t *p_address_book)
+{
+	char name_buff[NAME_SIZE];
+	int i;
+	
+
+	if(p_address_book->count >= p_address_book->size && (reallocate_memory(p_address_book) == K_FAIL))
+	{	
+		return K_FAIL;
+	}
+	if(add_contact_name(p_address_book, p_address_book->count) == K_SUCCESS)
+	{
+		p_address_book->count += 1;	
+	}
+	else
+	{
+		return K_FAIL;	
+	}
+
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("** ADD CONTACT MENU **\n");
+		printf("NAME : %s\n\n", p_address_book->list[p_address_book->count - 1].name);
+		printf("A. Add Details\n");
+		printf("X. Exit to main menu\n");
+		switch(getchar())
+		{
+			case 'A':
+			case 'a':
+				add_detail_menu(p_address_book->list + (p_address_book->count - 1));
+				break;
+			case 'X':
+			case 'x': 
+				return;
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}	
+}
+
+int modify_phone_numbers(abk_t *p_address_book, int index)
+{
+	WAIT_FOR_ENTER_KEY;	
+
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("** MODIFY PHONE NUMBER **\n");
+		printf("NAME : %s\n\n", p_address_book->list[index].name);
+		printf("A. Add phone numbers\n");
+		printf("M. Modifiy phone number\n");
+		printf("D. Delete phone number\n");
+		printf("X. Exit to modification menu\n");
+		switch(getchar())
+		{
+			case 'A':
+			case 'a':
+				add_contact_detail(p_address_book->list[index].phone_numbers, "phone number");
+				break;
+			case 'M':
+			case 'm':
+				modify_contact_detail(p_address_book->list[index].phone_numbers, "phone number");
+				break;
+			case 'D':
+			case 'd':
+				delete_contact_detail(p_address_book->list[index].phone_numbers);
+				break;
+			case 'X':
+			case 'x': 
+				return;
+			case '\n':
+				break; 
+		default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+	
+}
+
+int modify_email_addresses(abk_t *p_address_book, int index)
+{
+	WAIT_FOR_ENTER_KEY;	
+
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("** MODIFY EMAIL ADDRESSES **\n");
+		printf("NAME : %s\n\n", p_address_book->list[index].name);
+		printf("A. Add email address\n");
+		printf("M. Modifiy email address\n");
+		printf("D. Delete email address\n");
+		printf("X. Exit to modification menu\n");
+		switch(getchar())
+		{
+			case 'A':
+			case 'a':
+				add_contact_detail(p_address_book->list[index].email_addresses, "email address");
+				break;
+			case 'M':
+			case 'm':
+				modify_contact_detail(p_address_book->list[index].email_addresses, "phone number");
+				break;
+			case 'D':
+			case 'd':
+				delete_contact_detail(p_address_book->list[index].email_addresses);
+				break;
+			case 'X':
+			case 'x': 
+				return;
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+	
+}
+
+int modification_menu(abk_t *p_address_book, int index)
+{
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("** MODIFICATION MENU **\n");
+		printf("NAME : %s\n\n", p_address_book->list[index].name);
+		printf("C. Modify contact name\n");
+		printf("P. Add, Modifiy, Delete phone number\n");
+		printf("E. Add, Modifiy, Delete email address\n");
+		printf("X. Exit to main menu\n");
+		switch(getchar())
+		{
+			case 'C':
+			case 'c':
+				add_contact_name(p_address_book, index);
+				break;
+			case 'P':
+			case 'p':
+				modify_phone_numbers(p_address_book, index);
+				break;
+			case 'E':
+			case 'e':
+				modify_email_addresses(p_address_book, index);
+				break;
+			case 'X':
+			case 'x': 
+				return;
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+}
+
+
+int edit_contact_menu(abk_t *p_address_book)
+{
+	int index = 0;
+		
+	if(search_component(p_address_book, &index) == K_SUCCESS)
+	{
+		modification_menu(p_address_book, index);
+		return K_SUCCESS;
+	}
+	return K_FAIL;
+}
+
+int list_all_menu(abk_t *p_address_book)
+{	
+	
+	WAIT_FOR_ENTER_KEY;
+	list_all_contact(p_address_book);
+	printf("\nPRESS ENTER TO GO TO MAIN MENU\n");
+	WAIT_FOR_ENTER_KEY;
+}
+
+int delete_contact_menu(abk_t *p_address_book)
+{
+	int index = 0, i, c;
+		
+	if(search_component(p_address_book, &index) == K_SUCCESS)
+	{
+		
+		WAIT_FOR_ENTER_KEY;
+		printf("Are sure to delete contact ? (Y / N): ");
+		if((c = getchar()) == 'Y' || c == 'y')
+		{
+			for(i = index; i < (p_address_book->count - 1); i++)
+			{
+				memset(&p_address_book->list[i], 0, sizeof(contact_detail_t));
+				memcpy(&p_address_book->list[i], &p_address_book->list[i + 1], sizeof(contact_detail_t));
+			}
+			memset(&p_address_book->list[i], 0, sizeof(contact_detail_t));
+			p_address_book->count -= 1;
+			save_flag = NOT_SAVED;
+		}
+	}
+	return K_FAIL;
+}
+
+int exit_application_menu(abk_t *p_address_book)
+{
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("S. Save changes and exit\n");
+		printf("D. Discard changes and exit\n");
+		printf("C. Cancel exit\n");
+		switch(getchar())
+		{
+			case 'C':
+			case 'c':
+					return;
+			case 'D':
+			case 'd':
+					free(p_address_book->list);
+					CLR_SCREEN;
+					exit(0);
+			case 'S':
+			case 's':
+					save_file(DEFAULT_FILE, p_address_book);
+					free(p_address_book->list);
+					CLR_SCREEN;
+					exit(0);
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+}
+
+
+int main_menu(abk_t *p_address_book)
+{
+	while(1)
+	{
+		CLR_SCREEN;
+		printf("******   MAIN MENU   ******\n\n");
+		printf("A. Add contact\n");
+		printf("E. Edit contact\n");
+		printf("S. Search contact\n");
+		printf("L. List all contact\n");
+		printf("D. Delete contact\n");
+		printf("V. Save Contact Information\n");
+		printf("X. Close the application\n");
+		switch(getchar())
+		{
+			case 'A':
+			case 'a':
+				add_contact_menu(p_address_book);
+				break;
+			case 'E':
+			case 'e':
+				edit_contact_menu(p_address_book);
+				break;
+			case 'S':
+			case 's':
+				search_contact(p_address_book);
+				break;
+			case 'D':
+			case 'd':
+				delete_contact_menu(p_address_book);
+				break;
+			case 'L':
+			case 'l':
+				list_all_menu(p_address_book);
+				break;
+			case 'V':
+			case 'v':
+				save_file(DEFAULT_FILE, p_address_book);
+				save_flag = SAVED;
+				break;
+			case 'X':
+			case 'x':
+				CLR_SCREEN;
+				if(save_flag == NOT_SAVED)
+				{
+					exit_application_menu(p_address_book);
+					break;
+				}
+				return;
+			case '\n':
+				break; 
+			default:
+				printf(MSG_VALID_CHOICE);
+				sleep(1);
+				break;
+		}
+	}
+}

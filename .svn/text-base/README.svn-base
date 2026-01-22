@@ -1,0 +1,42 @@
+Filename : README
+
+********************************************************************************************************
+
+
+		C - Project "ADDRESS BOOK" application
+
+	Address Book is a small application written in C language. 
+	It keeps track of names and telephone/mobile numbers and e-mail addresses. 
+
+********************************************************************************************************
+
+C files : Total 4 C files are there.
+
+1. abk_main.c : It is main file containig the main function.
+
+2. abk_fileops.c : This file containing the fuction related to file for example load the data from the file and 
+		  save the data to the file.
+
+3. abk_menus.c : This file containing the fucntion related to user interface and data processing.
+
+4. abk_log.c : This file containg the function related to printing the error in display as well as in log file.
+
+
+Header files : Only one header file is there.
+
+1. abk.h : This header file containing the all #define, enums for the status and stucture definations.
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  How to compile the code <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+	To compile the code just type make. It will generate the one Output file named "abk". 
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   How to run application <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+	Run the executeble file "abk" (Example :  ./abk ) and don't pass any command line argument to the 
+	applicarion.
+		   
+
+

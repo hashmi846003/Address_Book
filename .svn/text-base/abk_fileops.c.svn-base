@@ -1,0 +1,296 @@
+
+
+/*
+	C Project
+	Address Book
+
+	Team A: Fenil, Flaby, Shridhar
+
+	26/Nov/2012
+
+	Implementation C File
+
+	File Operatios.
+
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "abk.h"
+
+
+#define MAX_BUF 32
+
+char *itoa(int number)
+{
+	static char temp_buff[11];
+	
+	sprintf(temp_buff,"%d", number);
+	return temp_buff;
+}
+
+// allocate first time, or, reallocate later
+return_t allocate(abk_t *p_address_book)
+{
+	if (p_address_book == NULL)
+	{
+		return log_error(K_ADDRESS_BOOK_NULL, "address book structure pointer is NULL!");
+	}
+
+	if (p_address_book -> size == 0)
+	{
+		p_address_book -> list = (contact_detail_t *)calloc(sizeof(contact_detail_t),  INITIAL_SIZE);
+		if (p_address_book -> list == NULL)
+		{
+			return K_MEMORY_ALLOCATION_FAILURE;
+		}
+		p_address_book->size = INITIAL_SIZE;
+		p_address_book->count = 0;
+	}
+	else
+	{
+		int newsize = 2 * (p_address_book -> size);
+		p_address_book -> list = (contact_detail_t *)calloc(sizeof(contact_detail_t),  newsize);
+		if (p_address_book -> list == NULL)
+		{
+			return K_MEMORY_ALLOCATION_FAILURE;
+		}
+		p_address_book->size = newsize;
+	}
+	return K_SUCCESS;
+}
+
+int read_count_of_contact(FILE *abk_file, abk_t *p_address_book)
+{
+	char temp_buff[32];
+	int i = 0, c;
+
+	fseek(abk_file, 0, SEEK_SET);
+
+	if((c = fgetc(abk_file)) != '#' || c == EOF)	
+	{
+		return log_error(K_WRONG_FILE_FORMAT, "INVALID FROMATED FILE");
+	}
+	else
+	{
+		/*Reading the contact count from the file */
+		for(i = 0; (c = fgetc(abk_file)) != '#' ; i++)
+		{
+			 // Expecting an integer at most 10 digits long
+			if ((c < '0') || (c > '9') || (i > 10) || (c == EOF))
+			{
+				return log_error(K_WRONG_FILE_FORMAT, "INVALID FROMATED FILE");
+			}
+			temp_buff[i] = c;
+		}
+		temp_buff[i] = '\0';
+	}
+	p_address_book -> count = p_address_book -> size = atoi(temp_buff);	
+	return K_SUCCESS;
+}
+
+int write_count_of_contact(FILE *abk_file, char *count)
+{
+	fputc('#', abk_file);
+	fwrite(count, 1, strlen(count), abk_file);
+	fputc('#', abk_file);
+	fputc('\n', abk_file);
+	
+}
+
+char *read_string_from_file(FILE *abk_file, char *temp_buff)
+{
+	int j, c;
+
+	for(j = 0; (temp_buff[j] = c = fgetc(abk_file)) != ':' ; j++)
+	{	
+		if(c == EOF || c == '\n')
+			return NULL;
+	}
+
+	temp_buff[j] = '\0';
+	return temp_buff;	
+}
+
+/*Reading the name of the contact form the data file*/
+int read_cotact_name(FILE *abk_file, char *name)
+{
+	static char temp_buff[32];
+
+	fgetc(abk_file); // Write macro to Skip the character.
+	if(read_string_from_file(abk_file, temp_buff) != NULL)
+	{
+		strcpy(name, temp_buff);
+		return 	K_SUCCESS;
+	}
+	return K_FAIL;
+}
+
+int write_cotact_name(FILE *abk_file, char *name)
+{
+	fwrite(name, 1, strlen(name), abk_file);
+	fputc(':', abk_file);
+}
+
+int read_detail(FILE *abk_file, char *field, char details[PHONE_NUMBER_COUNT][NUMBER_SIZE])
+{
+
+	static char temp_buff[32];
+	int i, j;
+
+	/*Reading the phone numbers from the the data file */
+
+	if(read_string_from_file(abk_file,temp_buff) == NULL || strcmp(temp_buff, field) != 0)
+	{
+		return log_error(K_WRONG_FILE_FORMAT, "INVALID FROMATED FILE");
+	}	
+	else
+	{
+		for(i = 0; i < PHONE_NUMBER_COUNT; i++)
+		{
+			if(read_string_from_file(abk_file, temp_buff) == NULL)
+			{
+				return K_FAIL;
+			}
+			strcpy(details[i], temp_buff);
+		}
+	}
+	return 	K_SUCCESS;
+}
+
+int write_cotact_detail(FILE *abk_file, char *field, char details[PHONE_NUMBER_COUNT][NUMBER_SIZE])
+{
+	int i;
+
+	fwrite(field, 1, strlen(field), abk_file);
+	fputc(':', abk_file);
+
+	for(i = 0; i < PHONE_NUMBER_COUNT; i++)
+	{
+		fwrite(details[i], 1, strlen(details[i]), abk_file);
+		fputc(':', abk_file);
+	}
+	fputc('\n', abk_file);
+}
+
+
+
+int load_file(char *abk_filename, abk_t *p_address_book)
+{
+	FILE *abk_file;
+	char temp_buff[MAX_BUF + 1];
+	char c;
+	int i = 0, j= 0;
+	int num_contacts;
+
+	return_t result;
+	bool_t b_new_file = FALSE;
+
+	if (abk_filename == NULL)
+	{
+		return log_error(K_FILENAME_NULL, "file name is null!");
+	}
+
+	if (p_address_book == NULL)
+	{
+		return log_error(K_ADDRESS_BOOK_NULL, "address book data structure pointer  is null!");
+	}
+
+ 	if ((abk_file = fopen(abk_filename, "r")) == NULL)
+	{
+		char c;
+		perror(DEFAULT_FILE);
+		printf("File does not exist. Would you like a fresh file? Y / N.\n");
+		c = getchar();
+		if ((c == 'y') || (c == 'Y'))
+		{
+			printf("Okay, creating new file...\n");
+			b_new_file = TRUE;
+			result = allocate(p_address_book);
+		}
+		else
+		{
+			return K_FILE_NOT_AVAILABLE;
+		}
+	}
+	else
+	{
+		result = read_count_of_contact(abk_file, p_address_book);
+		if (result != K_SUCCESS)
+		{
+			return result;
+		}
+
+		result = allocate(p_address_book);
+
+		if (result != K_SUCCESS)
+		{
+			return log_error(result, "allocate  failed");
+		}
+	
+		for(i = 0; i < p_address_book -> count; i++)
+		{
+			if(read_cotact_name(abk_file, p_address_book -> list[i].name) == K_FAIL)
+			{
+				return log_error(K_WRONG_FILE_FORMAT, "ERROR AT CONTACT NAME");
+			}
+			if(read_detail(abk_file, "PHONE", p_address_book -> list[i].phone_numbers) == K_FAIL)
+			{
+				return log_error(K_WRONG_FILE_FORMAT, "ERROR AT PHONE NUMBER");
+			}
+			if(read_cotact_name(abk_file, p_address_book -> list[i].name) == K_FAIL)
+			{
+				return log_error(K_WRONG_FILE_FORMAT, "ERROR AT CONTACT NAME");
+			}
+			if(read_detail(abk_file, "EMAIL", p_address_book->list[i].email_addresses) == K_FAIL)
+			{
+				return log_error(K_WRONG_FILE_FORMAT, "ERROR AT EMAIL ADDRESS");
+			}
+		}
+		fclose(abk_file);
+	}
+	return K_SUCCESS;
+}
+
+
+int save_file(char *abk_filename,  abk_t *p_address_book)
+{
+	FILE *abk_file;
+	char c;
+	int i = 0, j= 0;
+	int num_contacts, result;
+	bool_t b_new_file = FALSE;
+
+	if (abk_filename == NULL)
+	{
+		return log_error(K_FILENAME_NULL, "file name is null!");
+	}
+
+	if (p_address_book == NULL)
+	{
+		return log_error(K_ADDRESS_BOOK_NULL, "address book data structure pointer  is null!");
+	}
+
+ 	if ((abk_file = fopen(abk_filename, "w+")) == NULL)
+	{
+		perror(DEFAULT_FILE);
+		return log_error(K_FILE_COULD_NOT_BE_CREATED, "Unable to create the file");
+	}
+	
+	write_count_of_contact(abk_file, itoa(p_address_book -> count));
+
+	for(i = 0; i < p_address_book -> count; i++)
+	{
+		write_cotact_name(abk_file, p_address_book -> list[i].name);
+
+		write_cotact_detail(abk_file, "PHONE", p_address_book -> list[i].phone_numbers);
+
+		write_cotact_name(abk_file, p_address_book -> list[i].name);
+
+		write_cotact_detail(abk_file, "EMAIL", p_address_book -> list[i].email_addresses);
+	}
+	
+	fclose(abk_file);
+}

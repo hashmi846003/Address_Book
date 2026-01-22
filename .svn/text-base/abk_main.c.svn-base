@@ -1,0 +1,49 @@
+/*
+	C Project
+	Address Book
+
+	Team A: Fenil, Flaby, Shridhar
+
+	26/Nov/2012
+
+	Implementation C File
+
+	MAIN CONSOLE PROGRAM
+
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "abk.h"
+
+
+
+int usage(char *progname)
+{
+	printf("USAGE : %s\n", progname);
+
+	return K_FAIL; 
+}
+
+int main(int argc, char *argv[])
+{
+	int result = K_SUCCESS;
+
+	abk_t address_book = {NULL, 0, 0};
+	
+	if (argc != 1)
+	{
+		return usage(argv[0]);
+	}
+
+	if ((result = load_file(DEFAULT_FILE, &address_book) != K_SUCCESS))
+	{
+printf("load_file failed\n");
+		return result;
+	}
+printf("OK\n");
+
+	result = main_menu(&address_book);
+	return result;
+}

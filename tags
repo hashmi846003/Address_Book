@@ -1,0 +1,79 @@
+ABK_LOG_FILE	abk_log.c	22
+ADDRESS_BOOK_H	abk.h	2
+CLR_SCREEN	abk.h	24
+DEFAULT_FILE	abk.h	4
+DEFAULT_LIST_SIZE	abk.h	5
+DETAIL_ITEM_COUNT	abk.h	20
+DETAIL_SIZE	abk.h	19
+EMAIL_ADDRESS_COUNT	abk.h	17
+EMAIL_SIZE	abk.h	14
+FALSE	abk.h	29
+INITIAL_SIZE	abk.h	11
+K_ADDRESS_BOOK_NULL	abk.h	36
+K_FAIL	abk.h	35
+K_FILENAME_NULL	abk.h	39
+K_FILE_COULD_NOT_BE_CREATED	abk.h	38
+K_FILE_NOT_AVAILABLE	abk.h	37
+K_MEMORY_ALLOCATION_FAILURE	abk.h	40
+K_SUCCESS	abk.h	41
+K_WRONG_FILE_FORMAT	abk.h	42
+MAX_BUF	abk_fileops.c	24
+MSG_VALID_CHOICE	abk.h	22
+Mabk_main	abk_main.c	/^int main(int argc, char *argv[])$/
+NAME_SIZE	abk.h	12
+NOT_SAVED	abk.h	8
+NUMBER_SIZE	abk.h	13
+PHONE_NUMBER_COUNT	abk.h	16
+SAVED	abk.h	7
+TRUE	abk.h	30
+WAIT_FOR_ENTER_KEY	abk.h	26
+abk_log	abk_log.c	/^return_t abk_log (int result, char *msgtype, char /
+abk_t	abk.h	58
+add_contact_detail	abk_menus.c	/^int add_contact_detail(char c_details[DETAIL_ITEM_/
+add_contact_menu	abk_menus.c	/^int add_contact_menu(abk_t *p_address_book)$/
+add_contact_name	abk_menus.c	/^int add_contact_name(abk_t *p_address_book, int in/
+add_detail_menu	abk_menus.c	/^int add_detail_menu(contact_detail_t *p_detail)$/
+allocate	abk_fileops.c	/^return_t allocate(abk_t *p_address_book)$/
+bool_t	abk.h	28
+contact_detail_t	abk.h	50
+count	abk.h	57
+delete_contact_detail	abk_menus.c	/^int delete_contact_detail(char c_details[DETAIL_IT/
+delete_contact_menu	abk_menus.c	/^int delete_contact_menu(abk_t *p_address_book)$/
+edit_contact_menu	abk_menus.c	/^int edit_contact_menu(abk_t *p_address_book)$/
+email_addresses	abk.h	49
+exit_application_menu	abk_menus.c	/^int exit_application_menu(abk_t *p_address_book)$/
+itoa	abk_fileops.c	/^char *itoa(int number)$/
+list	abk.h	55
+list_all_contact	abk_menus.c	/^int list_all_contact(abk_t *p_address_book)$/
+list_all_menu	abk_menus.c	/^int list_all_menu(abk_t *p_address_book)$/
+load_file	abk_fileops.c	/^int load_file(char *abk_filename, abk_t *p_address/
+log_error	abk_log.c	/^return_t log_error(return_t result, char *msg)$/
+log_info	abk_log.c	/^return_t log_info(return_t result, char *msg)$/
+log_warn	abk_log.c	/^return_t log_warn(return_t result, char *msg)$/
+main_menu	abk_menus.c	/^int main_menu(abk_t *p_address_book)$/
+modification_menu	abk_menus.c	/^int modification_menu(abk_t *p_address_book, int i/
+modify_contact_detail	abk_menus.c	/^int modify_contact_detail(char c_details[DETAIL_IT/
+modify_email_addresses	abk_menus.c	/^int modify_email_addresses(abk_t *p_address_book, /
+modify_phone_numbers	abk_menus.c	/^int modify_phone_numbers(abk_t *p_address_book, in/
+name	abk.h	47
+phone_numbers	abk.h	48
+read_cotact_name	abk_fileops.c	/^int read_cotact_name(FILE *abk_file, char *name)$/
+read_count_of_contact	abk_fileops.c	/^int read_count_of_contact(FILE *abk_file, abk_t *p/
+read_detail	abk_fileops.c	/^int read_detail(FILE *abk_file, char *field, char /
+read_string_from_file	abk_fileops.c	/^char *read_string_from_file(FILE *abk_file, char */
+read_string_from_stdin	abk_menus.c	/^int read_string_from_stdin(char *string, int count/
+reallocate_memory	abk_menus.c	/^int reallocate_memory(abk_t *p_address_book)$/
+return_t	abk.h	43
+save_file	abk_fileops.c	/^int save_file(char *abk_filename,  abk_t *p_addres/
+save_flag	abk_menus.c	20
+search_by_email_address_menu	abk_menus.c	/^int search_by_email_address_menu(abk_t *p_address_/
+search_by_name_menu	abk_menus.c	/^int search_by_name_menu(abk_t *p_address_book, int/
+search_by_phone_number_menu	abk_menus.c	/^int search_by_phone_number_menu(abk_t *p_address_b/
+search_contact	abk_menus.c	/^int search_contact(abk_t *p_address_book)$/
+select_detail	abk_menus.c	/^int select_detail(char c_details[DETAIL_ITEM_COUNT/
+serach_component	abk_menus.c	/^int serach_component(abk_t *p_address_book, int *i/
+size	abk.h	56
+usage	abk_main.c	/^int usage(char *progname)$/
+write_cotact_detail	abk_fileops.c	/^int write_cotact_detail(FILE *abk_file, char *fiel/
+write_cotact_name	abk_fileops.c	/^int write_cotact_name(FILE *abk_file, char *name)$/
+write_count_of_contact	abk_fileops.c	/^int write_count_of_contact(FILE *abk_file, char *c/
