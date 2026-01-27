@@ -1,7 +1,23 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "abk.h"
 
+
+static int is_valid_name(const char *name)
+{
+    int len = strlen(name);
+
+    if (len < 4)
+        return 0;
+
+    for (int i = 0; i < len; i++)
+    {
+        if (!isalpha(name[i]))
+            return 0;
+    }
+    return 1;
+}
 
 
 static int is_valid_phone(const char *phone)
@@ -9,23 +25,27 @@ static int is_valid_phone(const char *phone)
     if (strlen(phone) != 10)
         return 0;
 
+    if (phone[0] < '6' || phone[0] > '9')
+        return 0;
+
     for (int i = 0; i < 10; i++)
     {
-        if (phone[i] < '0' || phone[i] > '9')
+        if (!isdigit(phone[i]))
             return 0;
     }
     return 1;
 }
 
+
 static int is_valid_email(const char *email)
 {
-    const char *at  = strchr(email, '@');
-    const char *dot = strchr(email, '.');
+    const char *at = strchr(email, '@');
+    const char *dot = strrchr(email, '.');
 
-    if (!at || !dot)
+    if (!at || strchr(at + 1, '@'))
         return 0;
 
-    if (dot < at)
+    if (!dot || dot < at)
         return 0;
 
     if ((dot - at - 1) < 4)
@@ -41,7 +61,6 @@ void init_address_book(abk_t *abk)
     abk->count = 0;
     load_contacts(abk);
 }
-
 
 
 void load_contacts(abk_t *abk)
@@ -66,7 +85,6 @@ void load_contacts(abk_t *abk)
 }
 
 
-
 void add_contact(abk_t *abk)
 {
     if (abk->count >= MAX_CONTACTS)
@@ -75,35 +93,45 @@ void add_contact(abk_t *abk)
         return;
     }
 
-    contact_t *c = &abk->list[abk->count];
-    c->id = (abk->count == 0) ? 1 : abk->list[abk->count - 1].id + 1;
+    contact_t temp;
 
-    printf("Name    : "); fgets(c->name, NAME_SIZE, stdin);
-    printf("Phone   : "); fgets(c->phone, NUMBER_SIZE, stdin);
-    printf("Email   : "); fgets(c->email, EMAIL_SIZE, stdin);
-    printf("Address : "); fgets(c->address, ADDRESS_SIZE, stdin);
+    printf("Name    : ");
+    fgets(temp.name, NAME_SIZE, stdin);
+    printf("Phone   : ");
+    fgets(temp.phone, NUMBER_SIZE, stdin);
+    printf("Email   : ");
+    fgets(temp.email, EMAIL_SIZE, stdin);
+    printf("Address : ");
+    fgets(temp.address, ADDRESS_SIZE, stdin);
 
-    c->name[strcspn(c->name, "\n")] = 0;
-    c->phone[strcspn(c->phone, "\n")] = 0;
-    c->email[strcspn(c->email, "\n")] = 0;
-    c->address[strcspn(c->address, "\n")] = 0;
+    temp.name[strcspn(temp.name, "\n")] = 0;
+    temp.phone[strcspn(temp.phone, "\n")] = 0;
+    temp.email[strcspn(temp.email, "\n")] = 0;
+    temp.address[strcspn(temp.address, "\n")] = 0;
 
-    if (!is_valid_phone(c->phone))
+    if (!is_valid_name(temp.name))
     {
-        log_warn(K_FAIL, "Invalid Phone (must be 10 digits)");
+        log_warn(K_FAIL, "Invalid Name (min 4 alphabets)");
         return;
     }
 
-    if (!is_valid_email(c->email))
+    if (!is_valid_phone(temp.phone))
+    {
+        log_warn(K_FAIL, "Invalid Phone (10 digits, starts 6–9)");
+        return;
+    }
+
+    if (!is_valid_email(temp.email))
     {
         log_warn(K_FAIL, "Invalid Email Format");
         return;
     }
 
-    abk->count++;
+    temp.id = (abk->count == 0) ? 1 : abk->list[abk->count - 1].id + 1;
+    abk->list[abk->count++] = temp;
+
     log_info(K_SUCCESS, "Contact Added");
 }
-
 
 
 void list_contacts(abk_t *abk)
@@ -125,7 +153,6 @@ void list_contacts(abk_t *abk)
     }
     WAIT_FOR_ENTER_KEY;
 }
-
 
 
 void search_contact(abk_t *abk)
@@ -159,7 +186,6 @@ void search_contact(abk_t *abk)
 
     WAIT_FOR_ENTER_KEY;
 }
-
 
 
 void edit_contact(abk_t *abk)
@@ -196,7 +222,6 @@ void edit_contact(abk_t *abk)
 }
 
 
-
 void delete_contact(abk_t *abk)
 {
     int id;
@@ -216,7 +241,6 @@ void delete_contact(abk_t *abk)
     }
     log_warn(K_FAIL, "ID Not Found");
 }
-
 
 
 void save_contacts(abk_t *abk)
