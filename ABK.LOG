@@ -49,3 +49,19 @@ INFO!: 16:45:19 Jan 22 2026 Exit
 INFO!: 16:45:19 Jan 22 2026 Contacts Saved
 INFO!: 16:45:19 Jan 22 2026 Exit
 WARN!: 17:37:30 Jan 26 2026 Invalid Phone (must be 10 digits)
+INFO!: 17:31:29 Jan 28 2026 Contacts loaded
+INFO!: 17:31:29 Jan 28 2026 Contacts loaded
+INFO!: 17:31:29 Jan 28 2026 Contact added
+INFO!: 17:31:29 Jan 28 2026 Search completed
+INFO!: 17:31:29 Jan 28 2026 Contact deleted
+INFO!: 17:31:29 Jan 28 2026 Contacts saved
+INFO!: 17:31:29 Jan 28 2026 Exit
+INFO!: 17:36:30 Jan 28 2026 Contacts loaded
+WARN!: 17:36:30 Jan 28 2026 Contact not found
+INFO!: 17:36:30 Jan 28 2026 Contact deleted successfully
+INFO!: 17:36:30 Jan 28 2026 Contacts saved
+INFO!: 17:36:30 Jan 28 2026 Exit
+INFO!: 17:39:29 Jan 28 2026 Contacts loaded
+ERROR!: 17:39:29 Jan 28 2026 Invalid delete option
+INFO!: 17:39:29 Jan 28 2026 Contacts saved
+INFO!: 17:39:29 Jan 28 2026 Exit

@@ -1,59 +1,60 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "abk.h"
 
 
-static int is_valid_name(const char *name)
+
+static int valid_name(const char *name)
 {
     int len = strlen(name);
-
-    if (len < 4)
-        return 0;
+    if (len < 4) return 0;
 
     for (int i = 0; i < len; i++)
-    {
-        if (!isalpha(name[i]))
+        if (!isalpha((unsigned char)name[i]) && name[i] != ' ')
             return 0;
-    }
+
     return 1;
 }
 
-
-static int is_valid_phone(const char *phone)
+static int valid_phone(const char *phone)
 {
-    if (strlen(phone) != 10)
-        return 0;
-
-    if (phone[0] < '6' || phone[0] > '9')
-        return 0;
+    if (strlen(phone) != 10) return 0;
+    if (phone[0] < '6' || phone[0] > '9') return 0;
 
     for (int i = 0; i < 10; i++)
-    {
-        if (!isdigit(phone[i]))
+        if (!isdigit((unsigned char)phone[i]))
             return 0;
-    }
+
     return 1;
 }
 
-
-static int is_valid_email(const char *email)
+static int valid_email(const char *email)
 {
     const char *at = strchr(email, '@');
     const char *dot = strrchr(email, '.');
 
-    if (!at || strchr(at + 1, '@'))
-        return 0;
-
-    if (!dot || dot < at)
-        return 0;
-
-    if ((dot - at - 1) < 4)
-        return 0;
+    if (!at || strchr(at + 1, '@')) return 0;
+    if (!dot || dot < at) return 0;
+    if ((dot - at - 1) < 4) return 0;
 
     return 1;
 }
 
+static int is_duplicate(abk_t *abk, contact_t *c)
+{
+    for (int i = 0; i < abk->count; i++)
+    {
+        contact_t *e = &abk->list[i];
+        if (!strcmp(e->name, c->name) &&
+            !strcmp(e->phone, c->phone) &&
+            !strcmp(e->email, c->email) &&
+            !strcmp(e->address, c->address))
+            return 1;
+    }
+    return 0;
+}
 
 
 void init_address_book(abk_t *abk)
@@ -62,116 +63,101 @@ void init_address_book(abk_t *abk)
     load_contacts(abk);
 }
 
-
 void load_contacts(abk_t *abk)
 {
     FILE *fp = fopen(DEFAULT_FILE, "r");
     if (!fp)
+    {
+        log_warn(SUCCESS, "No existing contact file found");
         return;
+    }
 
-    while (fscanf(fp,
-        "%d,%31[^,],%31[^,],%31[^,],%63[^\n]\n",
-        &abk->list[abk->count].id,
-        abk->list[abk->count].name,
-        abk->list[abk->count].phone,
-        abk->list[abk->count].email,
-        abk->list[abk->count].address) == 5)
+    while (abk->count < MAX_CONTACTS &&
+           fscanf(fp, "%d,%31[^,],%31[^,],%31[^,],%63[^\n]\n",
+                  &abk->list[abk->count].id,
+                  abk->list[abk->count].name,
+                  abk->list[abk->count].phone,
+                  abk->list[abk->count].email,
+                  abk->list[abk->count].address) == 5)
     {
         abk->count++;
-        if (abk->count >= MAX_CONTACTS)
-            break;
     }
-    fclose(fp);
-}
 
+    fclose(fp);
+    log_info(SUCCESS, "Contacts loaded");
+}
 
 void add_contact(abk_t *abk)
 {
     if (abk->count >= MAX_CONTACTS)
-    {
-        log_warn(K_FAIL, "Address Book Full");
-        return;
-    }
+        return (void)log_error(FAILURE, "Address book full");
 
     contact_t temp;
 
-    printf("Name    : ");
-    fgets(temp.name, NAME_SIZE, stdin);
-    printf("Phone   : ");
-    fgets(temp.phone, NUMBER_SIZE, stdin);
-    printf("Email   : ");
-    fgets(temp.email, EMAIL_SIZE, stdin);
-    printf("Address : ");
-    fgets(temp.address, ADDRESS_SIZE, stdin);
+    printf("Name    : "); fgets(temp.name, NAME_SIZE, stdin);
+    printf("Phone   : "); fgets(temp.phone, NUMBER_SIZE, stdin);
+    printf("Email   : "); fgets(temp.email, EMAIL_SIZE, stdin);
+    printf("Address : "); fgets(temp.address, ADDRESS_SIZE, stdin);
 
     temp.name[strcspn(temp.name, "\n")] = 0;
     temp.phone[strcspn(temp.phone, "\n")] = 0;
     temp.email[strcspn(temp.email, "\n")] = 0;
     temp.address[strcspn(temp.address, "\n")] = 0;
 
-    if (!is_valid_name(temp.name))
-    {
-        log_warn(K_FAIL, "Invalid Name (min 4 alphabets)");
-        return;
-    }
+    if (!valid_name(temp.name))
+        return (void)log_error(FAILURE,
+            "Invalid Name: alphabets & spaces only, min 4 chars");
 
-    if (!is_valid_phone(temp.phone))
-    {
-        log_warn(K_FAIL, "Invalid Phone (10 digits, starts 6–9)");
-        return;
-    }
+    if (!valid_phone(temp.phone))
+        return (void)log_error(FAILURE,
+            "Invalid Phone: 10 digits, starts with 6–9");
 
-    if (!is_valid_email(temp.email))
-    {
-        log_warn(K_FAIL, "Invalid Email Format");
-        return;
-    }
+    if (!valid_email(temp.email))
+        return (void)log_error(FAILURE,
+            "Invalid Email format");
 
-    temp.id = (abk->count == 0) ? 1 : abk->list[abk->count - 1].id + 1;
+    if (is_duplicate(abk, &temp))
+        return (void)log_warn(FAILURE,
+            "Duplicate contact not saved");
+
+    temp.id = (abk->count == 0) ? 1 :
+              abk->list[abk->count - 1].id + 1;
+
     abk->list[abk->count++] = temp;
-
-    log_info(K_SUCCESS, "Contact Added");
+    log_info(SUCCESS, "Contact added");
 }
 
-
-void list_contacts(abk_t *abk)
+return_t search_contact(abk_t *abk)
 {
-    if (!abk->count)
-    {
-        log_warn(K_FAIL, "No Contacts");
-        return;
-    }
+    int opt, found = 0;
+    char key[50];
 
-    for (int i = 0; i < abk->count; i++)
-    {
-        printf("ID:%d | %s | %s | %s | %s\n",
-               abk->list[i].id,
-               abk->list[i].name,
-               abk->list[i].phone,
-               abk->list[i].email,
-               abk->list[i].address);
-    }
+    if (!abk || abk->count == 0)
+        return log_warn(FAILURE, "Address book empty");
+
+    printf("\nSearch by:\n1.Name\n2.Phone\n3.Email\n4.Address\nOption: ");
+    scanf("%d", &opt);
     WAIT_FOR_ENTER_KEY;
-}
 
+    if (opt < 1 || opt > 4)
+        return log_error(FAILURE, "Invalid option");
 
-void search_contact(abk_t *abk)
-{
-    char key[64];
-    int found = 0;
-
-    printf("Search (name/phone/email/address): ");
+    printf("Enter search key: ");
     fgets(key, sizeof(key), stdin);
     key[strcspn(key, "\n")] = 0;
 
     for (int i = 0; i < abk->count; i++)
     {
-        if (strstr(abk->list[i].name, key) ||
-            strstr(abk->list[i].phone, key) ||
-            strstr(abk->list[i].email, key) ||
-            strstr(abk->list[i].address, key))
+        char *match = NULL;
+
+        if (opt == 1) match = strstr(abk->list[i].name, key);
+        else if (opt == 2) match = strstr(abk->list[i].phone, key);
+        else if (opt == 3) match = strstr(abk->list[i].email, key);
+        else if (opt == 4) match = strstr(abk->list[i].address, key);
+
+        if (match)
         {
-            printf("ID:%d | %s | %s | %s | %s\n",
+            printf("\n%d | %s | %s | %s | %s",
                    abk->list[i].id,
                    abk->list[i].name,
                    abk->list[i].phone,
@@ -181,11 +167,91 @@ void search_contact(abk_t *abk)
         }
     }
 
-    if (!found)
-        log_warn(K_FAIL, "No Matching Contact Found");
-
-    WAIT_FOR_ENTER_KEY;
+    printf("\n");
+    return found ? log_info(SUCCESS, "Search completed")
+                 : log_info(SUCCESS, "No match found");
 }
+
+void list_contacts(abk_t *abk)
+{
+    if (!abk->count)
+        return (void)log_warn(SUCCESS, "No contacts");
+
+    for (int i = 0; i < abk->count; i++)
+        printf("\n%d | %s | %s | %s | %s",
+               abk->list[i].id,
+               abk->list[i].name,
+               abk->list[i].phone,
+               abk->list[i].email,
+               abk->list[i].address);
+    printf("\n");
+}
+
+
+
+void delete_contact(abk_t *abk)
+{
+    int choice;
+    int id;
+    char name[NAME_SIZE];
+    int found = 0;
+
+    if (abk->count == 0)
+        return (void)log_warn(FAILURE, "Address book empty");
+
+    printf("\nDelete by:\n");
+    printf("1. ID\n");
+    printf("2. Name\n");
+    printf("Enter choice: ");
+    scanf("%d", &choice);
+    WAIT_FOR_ENTER_KEY;
+
+    if (choice == 1)
+    {
+        printf("Enter ID: ");
+        scanf("%d", &id);
+        WAIT_FOR_ENTER_KEY;
+
+        for (int i = 0; i < abk->count; i++)
+        {
+            if (abk->list[i].id == id)
+            {
+                abk->list[i] = abk->list[abk->count - 1];
+                abk->count--;
+                found = 1;
+                break;
+            }
+        }
+    }
+    else if (choice == 2)
+    {
+        printf("Enter Name: ");
+        fgets(name, NAME_SIZE, stdin);
+        name[strcspn(name, "\n")] = '\0';
+
+        for (int i = 0; i < abk->count; i++)
+        {
+            
+            if (strcmp(abk->list[i].name, name) == 0)
+            {
+                abk->list[i] = abk->list[abk->count - 1];
+                abk->count--;
+                found = 1;
+                break;   
+            }
+        }
+    }
+    else
+    {
+        return (void)log_error(FAILURE, "Invalid delete option");
+    }
+
+    if (found)
+        log_info(SUCCESS, "Contact deleted successfully");
+    else
+        log_warn(FAILURE, "Contact not found");
+}
+
 
 
 void edit_contact(abk_t *abk)
@@ -193,75 +259,48 @@ void edit_contact(abk_t *abk)
     int id;
     printf("Enter ID to edit: ");
     scanf("%d", &id);
-    getchar();
+    WAIT_FOR_ENTER_KEY;
 
     for (int i = 0; i < abk->count; i++)
     {
         if (abk->list[i].id == id)
         {
-            printf("New Phone: ");
-            fgets(abk->list[i].phone, NUMBER_SIZE, stdin);
-            printf("New Email: ");
-            fgets(abk->list[i].email, EMAIL_SIZE, stdin);
+            contact_t *c = &abk->list[i];
 
-            abk->list[i].phone[strcspn(abk->list[i].phone, "\n")] = 0;
-            abk->list[i].email[strcspn(abk->list[i].email, "\n")] = 0;
+            printf("New Phone: "); fgets(c->phone, NUMBER_SIZE, stdin);
+            printf("New Email: "); fgets(c->email, EMAIL_SIZE, stdin);
 
-            if (!is_valid_phone(abk->list[i].phone) ||
-                !is_valid_email(abk->list[i].email))
-            {
-                log_warn(K_FAIL, "Invalid Updated Data");
-                return;
-            }
+            c->phone[strcspn(c->phone, "\n")] = 0;
+            c->email[strcspn(c->email, "\n")] = 0;
 
-            log_info(K_SUCCESS, "Contact Updated");
-            return;
+            if (!valid_phone(c->phone) || !valid_email(c->email))
+                return (void)log_error(FAILURE,
+                    "Invalid phone/email");
+
+            if (is_duplicate(abk, c))
+                return (void)log_warn(FAILURE,
+                    "Duplicate after edit");
+
+            return (void)log_info(SUCCESS, "Contact updated");
         }
     }
-    log_warn(K_FAIL, "ID Not Found");
+    log_warn(FAILURE, "ID not found");
 }
-
-
-void delete_contact(abk_t *abk)
-{
-    int id;
-    printf("Enter ID to delete: ");
-    scanf("%d", &id);
-    getchar();
-
-    for (int i = 0; i < abk->count; i++)
-    {
-        if (abk->list[i].id == id)
-        {
-            abk->list[i] = abk->list[abk->count - 1];
-            abk->count--;
-            log_info(K_SUCCESS, "Contact Deleted");
-            return;
-        }
-    }
-    log_warn(K_FAIL, "ID Not Found");
-}
-
 
 void save_contacts(abk_t *abk)
 {
     FILE *fp = fopen(DEFAULT_FILE, "w");
     if (!fp)
-    {
-        log_error(K_FAIL, "File Open Failed");
-        return;
-    }
+        return (void)log_error(FAILURE, "File open failed");
 
     for (int i = 0; i < abk->count; i++)
-    {
         fprintf(fp, "%d,%s,%s,%s,%s\n",
                 abk->list[i].id,
                 abk->list[i].name,
                 abk->list[i].phone,
                 abk->list[i].email,
                 abk->list[i].address);
-    }
 
     fclose(fp);
-    log_info(K_SUCCESS, "Contacts Saved");
+    log_info(SUCCESS, "Contacts saved");
 }
